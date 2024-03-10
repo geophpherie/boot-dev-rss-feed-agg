@@ -1,17 +1,19 @@
 package main
 
 import (
-	"context"
+	"database/sql"
 	"encoding/json"
-	"fmt"
+	"errors"
+	"log"
 	"net/http"
 	"time"
 
+	"github.com/geophpherie/boot-dev-rss-feed-agg/src/internal/auth"
+	"github.com/geophpherie/boot-dev-rss-feed-agg/src/internal/database"
 	"github.com/google/uuid"
-	"github.com/jbeyer16/boot-dev-rss-feed-agg/src/internal/database"
 )
 
-func (cfg *apiConfig) CreateUser(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) createUser(w http.ResponseWriter, r *http.Request) {
 	type body struct {
 		Name string
 	}
@@ -31,14 +33,15 @@ func (cfg *apiConfig) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 	now := time.Now()
 
-	user, err := cfg.db.CreateUser(context.Background(), database.CreateUserParams{
+	user, err := cfg.db.CreateUser(r.Context(), database.CreateUserParams{
 		ID:        id,
 		CreatedAt: now,
 		UpdatedAt: now,
 		Name:      requestBody.Name,
 	})
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Unable to create user (%v)", err))
+		log.Printf("Unable to create user (%v)", err)
+		respondWithError(w, http.StatusBadRequest, "Couldn't create user")
 		return
 	}
 
@@ -47,6 +50,7 @@ func (cfg *apiConfig) CreateUser(w http.ResponseWriter, r *http.Request) {
 		CreatedAt time.Time `json:"created_at"`
 		UpdatedAt time.Time `json:"updated_at"`
 		Name      string    `json:"name"`
+		ApiKey    string    `json:"api_key"`
 	}
 
 	respondWithJSON(w, http.StatusCreated, response{
@@ -54,5 +58,38 @@ func (cfg *apiConfig) CreateUser(w http.ResponseWriter, r *http.Request) {
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 		Name:      user.Name,
+		ApiKey:    user.ApiKey,
+	})
+}
+
+func (cfg *apiConfig) getUser(w http.ResponseWriter, r *http.Request) {
+	apiKey, err := auth.ParseApiKey(r.Header)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "unable to parse api key")
+		return
+	}
+
+	user, err := cfg.db.GetUser(r.Context(), apiKey)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			respondWithError(w, http.StatusUnauthorized, "api key not valid")
+			return
+		}
+	}
+
+	type response struct {
+		Id        uuid.UUID `json:"id"`
+		CreatedAt time.Time `json:"created_at"`
+		UpdatedAt time.Time `json:"updated_at"`
+		Name      string    `json:"name"`
+		ApiKey    string    `json:"api_key"`
+	}
+
+	respondWithJSON(w, http.StatusOK, response{
+		Id:        user.ID,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+		Name:      user.Name,
+		ApiKey:    user.ApiKey,
 	})
 }

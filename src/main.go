@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/jbeyer16/boot-dev-rss-feed-agg/src/internal/database"
+	"github.com/geophpherie/boot-dev-rss-feed-agg/src/internal/database"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
@@ -32,7 +32,8 @@ func main() {
 
 	serveMux.HandleFunc("GET /v1/readiness", handleReadiness)
 	serveMux.HandleFunc("GET /v1/err", handleErr)
-	serveMux.HandleFunc("POST /v1/users", apiConfig.CreateUser)
+	serveMux.HandleFunc("POST /v1/users", apiConfig.createUser)
+	serveMux.HandleFunc("GET /v1/users", apiConfig.getUser)
 
 	server := http.Server{
 		Addr:    ":" + port,
