@@ -1,14 +1,11 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
-	"errors"
 	"log"
 	"net/http"
 	"time"
 
-	"github.com/geophpherie/boot-dev-rss-feed-agg/src/internal/auth"
 	"github.com/geophpherie/boot-dev-rss-feed-agg/src/internal/database"
 	"github.com/google/uuid"
 )
@@ -62,21 +59,7 @@ func (cfg *apiConfig) createUser(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (cfg *apiConfig) getUser(w http.ResponseWriter, r *http.Request) {
-	apiKey, err := auth.ParseApiKey(r.Header)
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "unable to parse api key")
-		return
-	}
-
-	user, err := cfg.db.GetUser(r.Context(), apiKey)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			respondWithError(w, http.StatusUnauthorized, "api key not valid")
-			return
-		}
-	}
-
+func (cfg *apiConfig) getUser(w http.ResponseWriter, r *http.Request, user database.User) {
 	type response struct {
 		Id        uuid.UUID `json:"id"`
 		CreatedAt time.Time `json:"created_at"`
