@@ -1,0 +1,22 @@
+meta {
+  name: createFeed
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:8080/v1/feeds
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: ApiKey {{apiKey}}
+}
+
+body:json {
+  {
+    "name": "The Boot.dev Blog",
+    "url": "https://blog.boot.dev/index.html"
+  }
+}
