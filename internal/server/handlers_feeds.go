@@ -1,15 +1,15 @@
-package main
+package server
 
 import (
 	"encoding/json"
 	"net/http"
 	"time"
 
-	"github.com/geophpherie/boot-dev-rss-feed-agg/src/internal/database"
+	"github.com/geophpherie/boot-dev-rss-feed-agg/internal/database"
 	"github.com/google/uuid"
 )
 
-func (cfg *apiConfig) createFeed(w http.ResponseWriter, r *http.Request, user database.User) {
+func (s *Server) createFeed(w http.ResponseWriter, r *http.Request, user database.User) {
 	type body struct {
 		Name string
 		Url  string
@@ -30,7 +30,7 @@ func (cfg *apiConfig) createFeed(w http.ResponseWriter, r *http.Request, user da
 	}
 	now := time.Now()
 
-	feed, err := cfg.db.CreateFeed(r.Context(), database.CreateFeedParams{
+	feed, err := s.db.CreateFeed(r.Context(), database.CreateFeedParams{
 		ID:        id,
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -43,7 +43,26 @@ func (cfg *apiConfig) createFeed(w http.ResponseWriter, r *http.Request, user da
 		return
 	}
 
-	type response struct {
+	feedFollow, err := s.db.CreateFeedFollow(r.Context(), database.CreateFeedFollowParams{
+		ID:        id,
+		CreatedAt: now,
+		UpdatedAt: now,
+		FeedID:    feed.ID,
+		UserID:    user.ID,
+	})
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Unable to create feed follow")
+		return
+	}
+
+	type userFeedFollowResponse struct {
+		Id        uuid.UUID `json:"id"`
+		CreatedAt time.Time `json:"created_at"`
+		UpdatedAt time.Time `json:"updated_at"`
+		FeedId    uuid.UUID `json:"feed_id"`
+		UserId    uuid.UUID `json:"user_id"`
+	}
+	type feedResponse struct {
 		Id        uuid.UUID `json:"id"`
 		CreatedAt time.Time `json:"created_at"`
 		UpdatedAt time.Time `json:"updated_at"`
@@ -51,18 +70,31 @@ func (cfg *apiConfig) createFeed(w http.ResponseWriter, r *http.Request, user da
 		Url       string    `json:"url"`
 		UserId    uuid.UUID `json:"user_id"`
 	}
-	respondWithJSON(w, http.StatusCreated, response{
-		Id:        feed.ID,
-		CreatedAt: feed.CreatedAt,
-		UpdatedAt: feed.UpdatedAt,
-		Name:      feed.Name,
-		Url:       feed.Url,
-		UserId:    feed.UserID,
-	})
+	response := struct {
+		Feed        feedResponse           `json:"feed"`
+		Feed_follow userFeedFollowResponse `json:"feed_follow"`
+	}{
+		Feed: feedResponse{
+			Id:        feed.ID,
+			CreatedAt: feed.CreatedAt,
+			UpdatedAt: feed.UpdatedAt,
+			Name:      feed.Name,
+			Url:       feed.Url,
+			UserId:    feed.UserID,
+		},
+		Feed_follow: userFeedFollowResponse{
+			Id:        feedFollow.ID,
+			CreatedAt: feedFollow.CreatedAt,
+			UpdatedAt: feedFollow.UpdatedAt,
+			FeedId:    feedFollow.FeedID,
+			UserId:    feedFollow.UserID,
+		},
+	}
+	respondWithJSON(w, http.StatusCreated, response)
 }
 
-func (cfg *apiConfig) getFeeds(w http.ResponseWriter, r *http.Request) {
-	feeds, err := cfg.db.GetFeeds(r.Context())
+func (s *Server) getFeeds(w http.ResponseWriter, r *http.Request) {
+	feeds, err := s.db.GetFeeds(r.Context())
 
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Unable to fetch feeds")

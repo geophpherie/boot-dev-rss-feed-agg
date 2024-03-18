@@ -1,11 +1,11 @@
 meta {
-  name: createFeed
+  name: createFeedFollow
   type: http
   seq: 1
 }
 
 post {
-  url: http://localhost:8080/v1/feeds
+  url: http://localhost:8080/v1/feed_follows
   body: json
   auth: none
 }
@@ -16,7 +16,6 @@ headers {
 
 body:json {
   {
-    "name": "nike",
-    "url": "https://www.nike.com"
+    "feed_id": "018e2e72-9795-7cde-98f4-90ce30fbdf85"
   }
 }

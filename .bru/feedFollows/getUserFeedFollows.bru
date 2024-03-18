@@ -1,0 +1,15 @@
+meta {
+  name: getUserFeedFollows
+  type: http
+  seq: 3
+}
+
+get {
+  url: http://localhost:8080/v1/feed_follows
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: ApiKey {{apiKey}}
+}

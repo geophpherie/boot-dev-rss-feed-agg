@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"encoding/json"
@@ -6,11 +6,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/geophpherie/boot-dev-rss-feed-agg/src/internal/database"
+	"github.com/geophpherie/boot-dev-rss-feed-agg/internal/database"
 	"github.com/google/uuid"
 )
 
-func (cfg *apiConfig) createUser(w http.ResponseWriter, r *http.Request) {
+func (s *Server) createUser(w http.ResponseWriter, r *http.Request) {
 	type body struct {
 		Name string
 	}
@@ -30,7 +30,7 @@ func (cfg *apiConfig) createUser(w http.ResponseWriter, r *http.Request) {
 	}
 	now := time.Now()
 
-	user, err := cfg.db.CreateUser(r.Context(), database.CreateUserParams{
+	user, err := s.db.CreateUser(r.Context(), database.CreateUserParams{
 		ID:        id,
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -59,7 +59,7 @@ func (cfg *apiConfig) createUser(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (cfg *apiConfig) getUser(w http.ResponseWriter, r *http.Request, user database.User) {
+func (s *Server) getUser(w http.ResponseWriter, r *http.Request, user database.User) {
 	type response struct {
 		Id        uuid.UUID `json:"id"`
 		CreatedAt time.Time `json:"created_at"`
