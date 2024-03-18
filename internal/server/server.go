@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/geophpherie/boot-dev-rss-feed-agg/internal/database"
@@ -12,22 +11,17 @@ import (
 )
 
 type Server struct {
-	port int
-
 	db *database.Queries
 }
 
 func New() *http.Server {
-	port, _ := strconv.Atoi(os.Getenv("PORT"))
 	NewServer := &Server{
-		port: port,
-
-		db: database.GetNew(),
+		db: database.GetQueries(),
 	}
 
 	// Declare Server config
 	server := &http.Server{
-		Addr:         fmt.Sprintf(":%d", NewServer.port),
+		Addr:         fmt.Sprintf(":%v", os.Getenv("PORT")),
 		Handler:      NewServer.RegisterRoutes(),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,

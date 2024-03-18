@@ -13,6 +13,7 @@ func main() {
 	godotenv.Load()
 
 	server := server.New()
-	fmt.Printf("SERVICE ON %v\n", server.Addr)
+
+	fmt.Printf("SERVICE %v\n", server.Addr)
 	log.Fatal(server.ListenAndServe())
 }

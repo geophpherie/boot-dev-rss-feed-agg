@@ -7,10 +7,9 @@ import (
 func (s *Server) RegisterRoutes() http.Handler {
 
 	serveMux := http.NewServeMux()
-	corsMux := middlewareCors(serveMux)
 
 	serveMux.HandleFunc("GET /v1/readiness", handleReadiness)
-	serveMux.HandleFunc("GET /v1/err", handleErr)
+	serveMux.HandleFunc("GET /v1/error", handleError)
 
 	serveMux.HandleFunc("POST /v1/users", s.createUser)
 	serveMux.HandleFunc("GET /v1/users", s.middlewareAuth(s.getUser))
@@ -22,5 +21,5 @@ func (s *Server) RegisterRoutes() http.Handler {
 	serveMux.HandleFunc("GET /v1/feed_follows", s.middlewareAuth(s.getFeedFollows))
 	serveMux.HandleFunc("DELETE /v1/feed_follows/{feed_follow_id}", s.deleteFeedFollow)
 
-	return corsMux
+	return middlewareCors(serveMux)
 }
