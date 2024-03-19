@@ -55,72 +55,27 @@ func (s *Server) createFeed(w http.ResponseWriter, r *http.Request, user databas
 		return
 	}
 
-	type userFeedFollowResponse struct {
-		Id        uuid.UUID `json:"id"`
-		CreatedAt time.Time `json:"created_at"`
-		UpdatedAt time.Time `json:"updated_at"`
-		FeedId    uuid.UUID `json:"feed_id"`
-		UserId    uuid.UUID `json:"user_id"`
-	}
-	type feedResponse struct {
-		Id        uuid.UUID `json:"id"`
-		CreatedAt time.Time `json:"created_at"`
-		UpdatedAt time.Time `json:"updated_at"`
-		Name      string    `json:"name"`
-		Url       string    `json:"url"`
-		UserId    uuid.UUID `json:"user_id"`
-	}
 	response := struct {
-		Feed        feedResponse           `json:"feed"`
-		Feed_follow userFeedFollowResponse `json:"feed_follow"`
+		Feed       Feed       `json:"feed"`
+		FeedFollow FeedFollow `json:"feed_follow"`
 	}{
-		Feed: feedResponse{
-			Id:        feed.ID,
-			CreatedAt: feed.CreatedAt,
-			UpdatedAt: feed.UpdatedAt,
-			Name:      feed.Name,
-			Url:       feed.Url,
-			UserId:    feed.UserID,
-		},
-		Feed_follow: userFeedFollowResponse{
-			Id:        feedFollow.ID,
-			CreatedAt: feedFollow.CreatedAt,
-			UpdatedAt: feedFollow.UpdatedAt,
-			FeedId:    feedFollow.FeedID,
-			UserId:    feedFollow.UserID,
-		},
+		Feed:       ConvertFeedModelToResource(feed),
+		FeedFollow: ConvertFeedFollowModelToResource(feedFollow),
 	}
 	respondWithJSON(w, http.StatusCreated, response)
 }
 
 func (s *Server) getFeeds(w http.ResponseWriter, r *http.Request) {
 	feeds, err := s.db.GetFeeds(r.Context())
-
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Unable to fetch feeds")
 		return
 	}
 
-	type feedResponse struct {
-		Id        uuid.UUID `json:"id"`
-		CreatedAt time.Time `json:"created_at"`
-		UpdatedAt time.Time `json:"updated_at"`
-		Name      string    `json:"name"`
-		Url       string    `json:"url"`
-		UserId    uuid.UUID `json:"user_id"`
-	}
-
-	response := []feedResponse{}
+	response := make(Feeds, 0, len(feeds))
 	for _, feed := range feeds {
-		response = append(response, feedResponse{
-			Id:        feed.ID,
-			CreatedAt: feed.CreatedAt,
-			UpdatedAt: feed.UpdatedAt,
-			Name:      feed.Name,
-			Url:       feed.Url,
-			UserId:    feed.UserID,
-		})
-
+		response = append(response, ConvertFeedModelToResource(feed))
 	}
+
 	respondWithJSON(w, http.StatusCreated, response)
 }

@@ -42,37 +42,9 @@ func (s *Server) createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	type response struct {
-		Id        uuid.UUID `json:"id"`
-		CreatedAt time.Time `json:"created_at"`
-		UpdatedAt time.Time `json:"updated_at"`
-		Name      string    `json:"name"`
-		ApiKey    string    `json:"api_key"`
-	}
-
-	respondWithJSON(w, http.StatusCreated, response{
-		Id:        user.ID,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
-		Name:      user.Name,
-		ApiKey:    user.ApiKey,
-	})
+	respondWithJSON(w, http.StatusCreated, ConvertUserModelToResource(user))
 }
 
 func (s *Server) getUser(w http.ResponseWriter, r *http.Request, user database.User) {
-	type response struct {
-		Id        uuid.UUID `json:"id"`
-		CreatedAt time.Time `json:"created_at"`
-		UpdatedAt time.Time `json:"updated_at"`
-		Name      string    `json:"name"`
-		ApiKey    string    `json:"api_key"`
-	}
-
-	respondWithJSON(w, http.StatusOK, response{
-		Id:        user.ID,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
-		Name:      user.Name,
-		ApiKey:    user.ApiKey,
-	})
+	respondWithJSON(w, http.StatusOK, ConvertUserModelToResource(user))
 }

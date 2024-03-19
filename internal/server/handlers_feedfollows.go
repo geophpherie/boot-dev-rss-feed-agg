@@ -47,20 +47,7 @@ func (s *Server) createFeedFollow(w http.ResponseWriter, r *http.Request, user d
 		return
 	}
 
-	type response struct {
-		Id        uuid.UUID `json:"id"`
-		CreatedAt time.Time `json:"created_at"`
-		UpdatedAt time.Time `json:"updated_at"`
-		FeedId    uuid.UUID `json:"feed_id"`
-		UserId    uuid.UUID `json:"user_id"`
-	}
-	respondWithJSON(w, http.StatusCreated, response{
-		Id:        feedFollow.ID,
-		CreatedAt: feedFollow.CreatedAt,
-		UpdatedAt: feedFollow.UpdatedAt,
-		FeedId:    feedFollow.FeedID,
-		UserId:    feedFollow.UserID,
-	})
+	respondWithJSON(w, http.StatusCreated, ConvertFeedFollowModelToResource(feedFollow))
 }
 
 func (s *Server) deleteFeedFollow(w http.ResponseWriter, r *http.Request) {
@@ -86,23 +73,9 @@ func (s *Server) getFeedFollows(w http.ResponseWriter, r *http.Request, user dat
 		return
 	}
 
-	type userFeedFollow struct {
-		Id        uuid.UUID `json:"id"`
-		CreatedAt time.Time `json:"created_at"`
-		UpdatedAt time.Time `json:"updated_at"`
-		FeedId    uuid.UUID `json:"feed_id"`
-		UserId    uuid.UUID `json:"user_id"`
-	}
-
-	response := make([]userFeedFollow, 0, len(feedFollows))
+	response := make(FeedFollows, 0, len(feedFollows))
 	for _, feedFollow := range feedFollows {
-		response = append(response, userFeedFollow{
-			Id:        feedFollow.ID,
-			CreatedAt: feedFollow.CreatedAt,
-			UpdatedAt: feedFollow.UpdatedAt,
-			FeedId:    feedFollow.FeedID,
-			UserId:    feedFollow.UserID,
-		})
+		response = append(response, ConvertFeedFollowModelToResource(feedFollow))
 	}
 	respondWithJSON(w, http.StatusCreated, response)
 }
