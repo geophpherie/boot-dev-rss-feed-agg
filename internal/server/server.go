@@ -14,9 +14,9 @@ type Server struct {
 	db *database.Queries
 }
 
-func New() *http.Server {
+func New(db *database.Queries) *http.Server {
 	NewServer := &Server{
-		db: database.GetQueries(),
+		db: db,
 	}
 
 	// Declare Server config
