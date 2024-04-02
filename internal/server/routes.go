@@ -21,5 +21,6 @@ func (s *Server) RegisterRoutes() http.Handler {
 	serveMux.HandleFunc("GET /v1/feed_follows", s.middlewareAuth(s.getFeedFollows))
 	serveMux.HandleFunc("DELETE /v1/feed_follows/{feed_follow_id}", s.deleteFeedFollow)
 
+	serveMux.HandleFunc("GET /v1/posts", s.middlewareAuth(s.getUserPosts))
 	return middlewareCors(serveMux)
 }

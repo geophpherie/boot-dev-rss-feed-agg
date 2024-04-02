@@ -2,6 +2,7 @@ package rss
 
 import (
 	"context"
+	"database/sql"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/geophpherie/boot-dev-rss-feed-agg/internal/database"
+	"github.com/google/uuid"
 )
 
 type RssFeed struct {
@@ -88,7 +90,32 @@ func ProcessRssFeeds(db *database.Queries) error {
 
 			db.MarkFeedFetched(context.Background(), params)
 			for _, post := range rssFeed.Channel.Item {
-				fmt.Println(post.Title)
+				id, err := uuid.NewV7()
+				if err != nil {
+					continue
+				}
+
+				// Wed, 28 Feb 2024 00:00:00 +0000
+				t, err := time.Parse("Mon, 02 Jan 2006 15:04:05 -0700", post.PubDate)
+				if err != nil {
+					fmt.Print("Unable to parse time", post.PubDate)
+					continue
+				}
+				now := time.Now()
+				postParams := database.CreatePostParams{
+					ID:          id,
+					CreatedAt:   now,
+					UpdatedAt:   now,
+					Title:       post.Title,
+					Url:         post.Link,
+					Description: sql.NullString{String: post.Description, Valid: true},
+					PublishedAt: sql.NullTime{Time: t, Valid: true},
+					FeedID:      feed.ID,
+				}
+				_, err = db.CreatePost(context.Background(), postParams)
+				if err != nil {
+					fmt.Println("Unable to create post ", err)
+				}
 			}
 		}(feed.Url)
 
